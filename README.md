@@ -3,4 +3,4 @@ Currently only available for EURUSD M15. I'll take this as my God-given opportun
 
 Market Data provided by https://forexsb.com/historical-forex-data
 
-Charting interface provided by 
+Charting interface provided by https://github.com/tradingview/lightweight-charts
