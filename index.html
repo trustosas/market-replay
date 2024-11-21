@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TradingView-like Chart</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        #chart {
+            width: 100%;
+        }
+        #controls {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <label for="datetime">Jump to Datetime:</label>
+        <input type="datetime-local" id="datetime">
+        <button id="jump-btn">Jump</button>
+    </div>
+    <div id="chart"></div>
+    <script>
+        const chartContainer = document.getElementById('chart');
+
+        // Initialize the chart
+        const chart = LightweightCharts.createChart(chartContainer, {
+            layout: {
+                backgroundColor: '#FFFFFF',
+                textColor: '#000',
+            },
+            grid: {
+                vertLines: { color: '#eee' },
+                horzLines: { color: '#eee' },
+            },
+            timeScale: {
+                timeVisible: true,
+                secondsVisible: false,
+            },
+        });
+
+        const candlestickSeries = chart.addCandlestickSeries();
+
+        // Fetch and set the data
+        let chartData = [];
+        fetch('eurusd15.json')
+            .then(response => response.json())
+            .then(data => {
+                chartData = data.map(item => ({
+                    time: new Date(item.datetime).getTime() / 1000,
+                    open: item.open,
+                    high: item.high,
+                    low: item.low,
+                    close: item.close,
+                }));
+                candlestickSeries.setData(chartData);
+            })
+            .catch(err => console.error('Error loading data:', err));
+
+        // Dynamically resize the chart
+        function resizeChart() {
+            const viewportHeight = window.visualViewport?.height || window.innerHeight;
+            const viewportWidth = window.visualViewport?.width || window.innerWidth;
+            const controlsHeight = document.getElementById('controls').offsetHeight + 20; // Add padding
+
+            // Resize the chart dynamically
+            chartContainer.style.height = `${viewportHeight - controlsHeight}px`;
+            chart.resize(viewportWidth - 20, viewportHeight - controlsHeight); // Leave 20px for price scale
+        }
+
+        window.addEventListener('resize', resizeChart);
+        resizeChart();
+
+        // Jump to specific datetime
+        document.getElementById('jump-btn').addEventListener('click', () => {
+            const datetimeInput = document.getElementById('datetime').value;
+            if (datetimeInput) {
+                const targetTime = new Date(datetimeInput).getTime() / 1000;
+
+                // Find the closest data point
+                const closestData = chartData.reduce((prev, curr) =>
+                    Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
+                );
+
+                // Set visible range around the target time
+                if (closestData) {
+                    chart.timeScale().setVisibleRange({
+                        from: closestData.time - 60 * 15, // 15 minutes before
+                        to: closestData.time + 60 * 15,  // 15 minutes after
+                    });
+                }
+            } else {
+                alert('Please select a valid datetime.');
+            }
+        });
+    </script>
+</body>
+</html>
