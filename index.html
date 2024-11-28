@@ -84,13 +84,14 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
-        // Jump to specific datetime
+        // Jump to specific datetime and retain zoom level
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
 
             if (datetimeInput) {
                 // Capture the current visible range
                 const currentRange = chart.timeScale().getVisibleRange();
+                const currentZoom = currentRange.to - currentRange.from;
 
                 // Parse the datetime input as UTC
                 const inputDate = new Date(datetimeInput);
@@ -110,8 +111,8 @@
                 // Set the visible range around the target time while retaining the zoom level
                 if (closestData) {
                     chart.timeScale().setVisibleRange({
-                        from: closestData.time - (currentRange.to - currentRange.from) / 2,  // Keep the same zoom level
-                        to: closestData.time + (currentRange.to - currentRange.from) / 2,
+                        from: closestData.time - currentZoom / 2,  // Adjust based on the previous zoom level
+                        to: closestData.time + currentZoom / 2,
                     });
                 }
             } else {
