@@ -84,7 +84,7 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
-        // Maintain zoom level and jump to specific datetime
+        // Jump to specific datetime
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
             if (datetimeInput) {
@@ -95,28 +95,12 @@
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
 
-                // Get current visible range
-                const visibleRange = chart.timeScale().getVisibleRange();
-
-                if (closestData && visibleRange) {
-                    // Adjust the visible range while maintaining zoom level
-                    const currentRange = visibleRange.to - visibleRange.from;
-                    const newFrom = closestData.time - currentRange / 2;
-                    const newTo = closestData.time + currentRange / 2;
-
-                    // Set the visible range to include the target candle
-                    chart.timeScale().setVisibleRange({ from: newFrom, to: newTo });
-
-                    // Highlight the specific candle (optional)
-                    candlestickSeries.setMarkers([
-                        {
-                            time: closestData.time,
-                            position: 'aboveBar',
-                            color: 'red',
-                            shape: 'circle',
-                            text: 'Target',
-                        },
-                    ]);
+                // Set visible range around the target time
+                if (closestData) {
+                    chart.timeScale().setVisibleRange({
+                        from: closestData.time - 60 * 15, // 15 minutes before
+                        to: closestData.time + 60 * 15,  // 15 minutes after
+                    });
                 }
             } else {
                 alert('Please select a valid datetime.');
