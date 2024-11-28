@@ -114,6 +114,10 @@
                         from: closestData.time - currentZoom / 2,  // Adjust based on the previous zoom level
                         to: closestData.time + currentZoom / 2,
                     });
+
+                    // Set the crosshair on the closest data point
+                    chart.subscribeCrosshairMove(() => {}); // Ensure any previous subscription is replaced
+                    chart.moveCrosshairToSeries(candlestickSeries, closestData.time);
                 }
             } else {
                 alert('Please select a valid datetime.');
