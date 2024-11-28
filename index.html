@@ -24,6 +24,13 @@
             z-index: 10;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
         }
+        .vertical-crosshair {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            width: 2px;
+            height: 100%;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -84,15 +91,11 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
-        // Jump to specific datetime and retain zoom level
+        // Add a vertical crosshair
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
 
             if (datetimeInput) {
-                // Capture the current visible range
-                const currentRange = chart.timeScale().getVisibleRange();
-                const currentZoom = currentRange.to - currentRange.from;
-
                 // Parse the datetime input as UTC
                 const inputDate = new Date(datetimeInput);
                 const targetTime = Math.floor(Date.UTC(
@@ -108,21 +111,33 @@
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
 
-                // Set the visible range around the target time while retaining the zoom level
+                // Draw the vertical crosshair
                 if (closestData) {
-                    chart.timeScale().setVisibleRange({
-                        from: closestData.time - currentZoom / 2,  // Adjust based on the previous zoom level
-                        to: closestData.time + currentZoom / 2,
-                    });
-
-                    // Set the crosshair on the closest data point
-                    chart.subscribeCrosshairMove(() => {}); // Ensure any previous subscription is replaced
-                    chart.moveCrosshairToSeries(candlestickSeries, closestData.time);
+                    drawVerticalCrosshair(closestData);
                 }
             } else {
                 alert('Please select a valid datetime.');
             }
         });
+
+        function drawVerticalCrosshair(closestData) {
+            // Remove any existing crosshair
+            const existingCrosshair = document.querySelector('.vertical-crosshair');
+            if (existingCrosshair) existingCrosshair.remove();
+
+            // Get the X-coordinate of the closest data point
+            const xCoordinate = chart.timeScale().timeToCoordinate(closestData.time);
+
+            // If the coordinate is valid, draw the line
+            if (xCoordinate !== null) {
+                const verticalLine = document.createElement('div');
+                verticalLine.className = 'vertical-crosshair';
+                verticalLine.style.left = `${xCoordinate}px`;
+
+                // Append to the chart container
+                chartContainer.appendChild(verticalLine);
+            }
+        }
     </script>
 </body>
 </html>
