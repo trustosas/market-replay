@@ -89,7 +89,10 @@
             const datetimeInput = document.getElementById('datetime').value;
 
             if (datetimeInput) {
-                // Parse the datetime input as UTC (use `Date.UTC` to enforce UTC interpretation)
+                // Capture the current visible range
+                const currentRange = chart.timeScale().getVisibleRange();
+
+                // Parse the datetime input as UTC
                 const inputDate = new Date(datetimeInput);
                 const targetTime = Math.floor(Date.UTC(
                     inputDate.getFullYear(),
@@ -104,11 +107,11 @@
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
 
-                // Set the visible range around the target time
+                // Set the visible range around the target time while retaining the zoom level
                 if (closestData) {
                     chart.timeScale().setVisibleRange({
-                        from: closestData.time - 60 * 15, // 15 minutes before
-                        to: closestData.time + 60 * 15,  // 15 minutes after
+                        from: closestData.time - (currentRange.to - currentRange.from) / 2,  // Keep the same zoom level
+                        to: closestData.time + (currentRange.to - currentRange.from) / 2,
                     });
                 }
             } else {
