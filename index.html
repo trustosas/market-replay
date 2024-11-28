@@ -87,15 +87,24 @@
         // Jump to specific datetime
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
-            if (datetimeInput) {
-                const targetTime = new Date(datetimeInput).getTime() / 1000;
 
-                // Find the closest data point
+            if (datetimeInput) {
+                // Parse the datetime input as UTC (use `Date.UTC` to enforce UTC interpretation)
+                const inputDate = new Date(datetimeInput);
+                const targetTime = Math.floor(Date.UTC(
+                    inputDate.getFullYear(),
+                    inputDate.getMonth(),
+                    inputDate.getDate(),
+                    inputDate.getHours(),
+                    inputDate.getMinutes()
+                ) / 1000); // Convert to seconds
+
+                // Find the closest data point in UTC
                 const closestData = chartData.reduce((prev, curr) =>
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
 
-                // Set visible range around the target time
+                // Set the visible range around the target time
                 if (closestData) {
                     chart.timeScale().setVisibleRange({
                         from: closestData.time - 60 * 15, // 15 minutes before
