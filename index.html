@@ -24,17 +24,6 @@
             z-index: 10;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
         }
-        .custom-crosshair {
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.5);
-            pointer-events: none;
-        }
-        .crosshair-vertical {
-            width: 2px;
-        }
-        .crosshair-horizontal {
-            height: 2px;
-        }
     </style>
 </head>
 <body>
@@ -95,11 +84,15 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
-        // Simulate crosshair at the desired candle
+        // Jump to specific datetime and retain zoom level
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
 
             if (datetimeInput) {
+                // Capture the current visible range
+                const currentRange = chart.timeScale().getVisibleRange();
+                const currentZoom = currentRange.to - currentRange.from;
+
                 // Parse the datetime input as UTC
                 const inputDate = new Date(datetimeInput);
                 const targetTime = Math.floor(Date.UTC(
@@ -115,37 +108,21 @@
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
 
-                // Draw the custom crosshair
+                // Set the visible range around the target time while retaining the zoom level
                 if (closestData) {
-                    drawCustomCrosshair(closestData);
+                    chart.timeScale().setVisibleRange({
+                        from: closestData.time - currentZoom / 2,  // Adjust based on the previous zoom level
+                        to: closestData.time + currentZoom / 2,
+                    });
+
+                    // Set the crosshair on the closest data point
+                    chart.subscribeCrosshairMove(() => {}); // Ensure any previous subscription is replaced
+                    chart.moveCrosshairToSeries(candlestickSeries, closestData.time);
                 }
             } else {
                 alert('Please select a valid datetime.');
             }
         });
-
-        function drawCustomCrosshair(closestData) {
-            // Remove any existing crosshair
-            const existingCrosshair = document.querySelector('.custom-crosshair');
-            if (existingCrosshair) existingCrosshair.remove();
-
-            // Create crosshair elements
-            const verticalLine = document.createElement('div');
-            verticalLine.className = 'custom-crosshair crosshair-vertical';
-            verticalLine.style.left = `${chart.timeScale().timeToCoordinate(closestData.time)}px`;
-            verticalLine.style.top = '0';
-            verticalLine.style.height = `${chartContainer.offsetHeight}px`;
-
-            const horizontalLine = document.createElement('div');
-            horizontalLine.className = 'custom-crosshair crosshair-horizontal';
-            horizontalLine.style.left = '0';
-            horizontalLine.style.width = `${chartContainer.offsetWidth}px`;
-            horizontalLine.style.top = `${chart.priceScale().priceToCoordinate(closestData.close)}px`;
-
-            // Append to chart container
-            chartContainer.appendChild(verticalLine);
-            chartContainer.appendChild(horizontalLine);
-        }
     </script>
 </body>
 </html>
