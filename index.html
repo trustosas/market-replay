@@ -115,11 +115,17 @@
                         }
                     ]);
 
-                    // Scroll the chart to bring the candle into view
-                    const logicalIndex = chart.timeScale().timeToCoordinate(closestData.time);
-                    if (logicalIndex !== null) {
-                        chart.timeScale().scrollToPosition(logicalIndex, false);
-                    }
+                    // Adjust the visible range to focus on the target candle
+                    const range = chart.timeScale().getVisibleRange();
+                    const targetIndex = chartData.findIndex(candle => candle.time === closestData.time);
+
+                    const from = Math.max(targetIndex - 30, 0); // Focus on the candle, with some buffer
+                    const to = Math.min(targetIndex + 30, chartData.length - 1); // Same buffer after the candle
+
+                    chart.timeScale().setVisibleRange({
+                        from: chartData[from].time,
+                        to: chartData[to].time
+                    });
                 } else {
                     alert('No matching candle found.');
                 }
