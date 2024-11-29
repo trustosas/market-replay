@@ -2,7 +2,15 @@
 <html>
 <head>
     <style>
-        /* Add any necessary styling here */
+        /* Style for the vertical crosshair */
+        .vertical-crosshair {
+            position: absolute;
+            width: 1px;
+            background-color: rgba(255, 0, 0, 0.8); /* Red color */
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -25,13 +33,43 @@
             { time: '2024-11-28T04:30:00', open: 1.03, high: 1.07, low: 1.01, close: 1.02 },
         ]);
 
-        // Helper function to simulate crosshair movement
-        function moveCrosshairToCandle(time) {
-            const logicalIndex = series.data().findIndex(data => data.time === time);
-            if (logicalIndex !== -1) {
-                chart.setCrosshairPosition({ time: time });
+        let crosshairTime = null; // Store the target time for the crosshair
+
+        function drawVerticalCrosshair(closestData) {
+            crosshairTime = closestData.time; // Save the crosshair's time
+
+            // Remove any existing crosshair
+            const existingCrosshair = document.querySelector('.vertical-crosshair');
+            if (existingCrosshair) existingCrosshair.remove();
+
+            // Create a new crosshair line
+            const verticalLine = document.createElement('div');
+            verticalLine.className = 'vertical-crosshair';
+            chartContainer.appendChild(verticalLine);
+
+            // Position the crosshair
+            updateVerticalCrosshair();
+        }
+
+        function updateVerticalCrosshair() {
+            if (crosshairTime === null) return; // No crosshair to update
+
+            // Get the X-coordinate of the crosshair's time
+            const xCoordinate = chart.timeScale().timeToCoordinate(crosshairTime);
+            const verticalLine = document.querySelector('.vertical-crosshair');
+
+            if (xCoordinate !== null && verticalLine) {
+                verticalLine.style.left = `${xCoordinate}px`;
+            } else if (verticalLine) {
+                // If the time is no longer visible, hide the crosshair
+                verticalLine.style.left = '-9999px';
             }
         }
+
+        // Listen for changes to the chart's visible time range
+        chart.timeScale().subscribeVisibleTimeRangeChange(() => {
+            updateVerticalCrosshair();
+        });
 
         // Handle jump functionality
         document.getElementById('jump-button').addEventListener('click', () => {
@@ -43,8 +81,7 @@
 
             if (closestData) {
                 chart.timeScale().setVisibleRange({ from: jumpTime, to: jumpTime });
-                // Simulate crosshair
-                moveCrosshairToCandle(jumpTime);
+                drawVerticalCrosshair(closestData);
             } else {
                 alert('No data for the selected time');
             }
