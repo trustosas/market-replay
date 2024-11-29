@@ -125,18 +125,25 @@
             const existingCrosshair = document.querySelector('.vertical-crosshair');
             if (existingCrosshair) existingCrosshair.remove();
 
+            // Bring the target time into view
+            chart.timeScale().setVisibleRange({
+                from: closestData.time - 60 * 15, // 15 minutes before
+                to: closestData.time + 60 * 15,  // 15 minutes after
+            });
+
             // Get the X-coordinate of the closest data point
-            const xCoordinate = chart.timeScale().timeToCoordinate(closestData.time);
+            setTimeout(() => {
+                const xCoordinate = chart.timeScale().timeToCoordinate(closestData.time);
 
-            // If the coordinate is valid, draw the line
-            if (xCoordinate !== null) {
-                const verticalLine = document.createElement('div');
-                verticalLine.className = 'vertical-crosshair';
-                verticalLine.style.left = `${xCoordinate}px`;
+                if (xCoordinate !== null) {
+                    const verticalLine = document.createElement('div');
+                    verticalLine.className = 'vertical-crosshair';
+                    verticalLine.style.left = `${xCoordinate}px`;
 
-                // Append to the chart container
-                chartContainer.appendChild(verticalLine);
-            }
+                    // Append to the chart container
+                    chartContainer.appendChild(verticalLine);
+                }
+            }, 100); // Delay to ensure the visible range is updated
         }
     </script>
 </body>
