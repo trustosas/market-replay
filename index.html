@@ -103,17 +103,23 @@
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
 
-                // Highlight the candle by adding a marker
                 if (closestData) {
+                    // Highlight the candle by adding a marker
                     candlestickSeries.setMarkers([
                         {
                             time: closestData.time,
                             position: 'aboveBar',
                             color: '#ff0000', // Highlight color
                             shape: 'arrowDown', // Shape of the marker
-                            text: '',
+                            text: 'Target Candle',
                         }
                     ]);
+
+                    // Scroll the chart to bring the candle into view
+                    const logicalIndex = chart.timeScale().timeToCoordinate(closestData.time);
+                    if (logicalIndex !== null) {
+                        chart.timeScale().scrollToPosition(logicalIndex, false);
+                    }
                 } else {
                     alert('No matching candle found.');
                 }
