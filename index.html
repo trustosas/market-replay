@@ -9,7 +9,7 @@
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            overflow: hidden; /* Prevent scrollbars */
         }
         #chart {
             width: 100%;
@@ -23,71 +23,18 @@
             border-radius: 5px;
             z-index: 10;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-            display: none; /* Initially hidden */
-            width: 300px;
-            text-align: center;
-        }
-        #calendar-btn {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            font-size: 24px;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        #calendar-btn:before {
-            content: "Time & Date"; /* Placeholder text for the icon */
-            font-size: 20px;
-        }
-        #calendar-wrapper {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: none; /* Initially hidden */
-            z-index: 15;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        .calendar-icon {
-            font-size: 24px;
-            width: 20px;
-            height: 20px;
-            background-color: #ccc;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-        .calendar-icon:before {
-            content: "\1F4C5"; /* Unicode for calendar */
-            font-size: 18px;
         }
     </style>
 </head>
 <body>
-    <button id="calendar-btn" class="calendar-icon"></button>
-
-    <div id="calendar-wrapper">
+    <div id="controls">
         <label for="datetime">Jump to Datetime:</label>
         <input type="datetime-local" id="datetime">
         <button id="jump-btn">Jump</button>
     </div>
-    
     <div id="chart"></div>
-
     <script>
         const chartContainer = document.getElementById('chart');
-        const calendarBtn = document.getElementById('calendar-btn');
-        const calendarWrapper = document.getElementById('calendar-wrapper');
-        const jumpBtn = document.getElementById('jump-btn');
 
         // Initialize the chart
         const chart = LightweightCharts.createChart(chartContainer, {
@@ -137,13 +84,8 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
-        // Toggle the calendar wrapper visibility
-        calendarBtn.addEventListener('click', () => {
-            calendarWrapper.style.display = calendarWrapper.style.display === 'none' || !calendarWrapper.style.display ? 'block' : 'none';
-        });
-
         // Jump to specific datetime
-        jumpBtn.addEventListener('click', () => {
+        document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
 
             if (datetimeInput) {
@@ -190,9 +132,6 @@
             } else {
                 alert('Please select a valid datetime.');
             }
-
-            // Hide the calendar wrapper after the jump
-            calendarWrapper.style.display = 'none';
         });
     </script>
 </body>
