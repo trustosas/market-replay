@@ -4,6 +4,8 @@ Why only M15, you may ask? Well it's because I'm a developing Photon trader. In 
 
 I'll take this as my God-given opportunity to sharpen my almost non existent web dev skills lol. (I only know Python as I code as a hobby, JavaScript is a weak point for me)
 
+I'll soon add the python script i use in parsing/converting data for use with lightweight-charts.
+
 Market Data provided by https://forexsb.com/historical-forex-data
 
 Charting interface provided by https://github.com/tradingview/lightweight-charts
