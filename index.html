@@ -84,7 +84,7 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
-        // Jump to specific datetime and place a crosshair
+        // Jump to specific datetime
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
 
@@ -104,11 +104,12 @@
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
 
-                // Move the crosshair to the target time
+                // Set the visible range around the target time
                 if (closestData) {
-                    chart.moveCrosshair({ time: closestData.time });
-                } else {
-                    alert('No data found for the selected datetime.');
+                    chart.timeScale().setVisibleRange({
+                        from: closestData.time - 60 * 15, // 15 minutes before
+                        to: closestData.time + 60 * 15,  // 15 minutes after
+                    });
                 }
             } else {
                 alert('Please select a valid datetime.');
