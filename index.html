@@ -1,150 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradingView-like Chart</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Prevent scrollbars */
-        }
-        #chart {
-            width: 100%;
-        }
-        #controls {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 10;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
-        }
+        /* Style for the vertical crosshair */
         .vertical-crosshair {
             position: absolute;
-            background-color: rgba(0, 0, 0, 0.8);
-            width: 2px;
+            width: 1px;
+            background-color: rgba(255, 0, 0, 0.8); /* Red color */
             height: 100%;
+            z-index: 10;
             pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <label for="datetime">Jump to Datetime:</label>
-        <input type="datetime-local" id="datetime">
-        <button id="jump-btn">Jump</button>
+    <div id="chart-container" style="width: 100%; height: 500px; position: relative;"></div>
+    <div>
+        <label for="datetime-input">Jump to Datetime:</label>
+        <input type="datetime-local" id="datetime-input" />
+        <button id="jump-button">Jump</button>
     </div>
-    <div id="chart"></div>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <script>
-        const chartContainer = document.getElementById('chart');
+        const chartContainer = document.getElementById('chart-container');
+        const chart = LightweightCharts.createChart(chartContainer, { width: 600, height: 400 });
+        const series = chart.addCandlestickSeries();
 
-        // Initialize the chart
-        const chart = LightweightCharts.createChart(chartContainer, {
-            layout: {
-                backgroundColor: '#FFFFFF',
-                textColor: '#000',
-            },
-            grid: {
-                vertLines: { color: '#eee' },
-                horzLines: { color: '#eee' },
-            },
-            timeScale: {
-                timeVisible: true,
-                secondsVisible: false,
-            },
-        });
+        series.setData([
+            { time: '2024-11-28T03:45:00', open: 1.05, high: 1.1, low: 1.03, close: 1.06 },
+            { time: '2024-11-28T04:00:00', open: 1.06, high: 1.09, low: 1.04, close: 1.05 },
+            { time: '2024-11-28T04:15:00', open: 1.05, high: 1.08, low: 1.02, close: 1.03 },
+            { time: '2024-11-28T04:30:00', open: 1.03, high: 1.07, low: 1.01, close: 1.02 },
+        ]);
 
-        const candlestickSeries = chart.addCandlestickSeries();
-
-        // Fetch and set the data
-        let chartData = [];
-        fetch('eurusd15.json')
-            .then(response => response.json())
-            .then(data => {
-                chartData = data.map(item => ({
-                    time: new Date(item.datetime).getTime() / 1000,
-                    open: item.open,
-                    high: item.high,
-                    low: item.low,
-                    close: item.close,
-                }));
-                candlestickSeries.setData(chartData);
-            })
-            .catch(err => console.error('Error loading data:', err));
-
-        // Dynamically resize the chart
-        function resizeChart() {
-            const viewportHeight = window.visualViewport?.height || window.innerHeight;
-            const viewportWidth = window.visualViewport?.width || window.innerWidth;
-            const controlsHeight = document.getElementById('controls').offsetHeight + 20; // Add padding
-
-            // Resize the chart dynamically
-            chartContainer.style.height = `${viewportHeight - controlsHeight}px`;
-            chart.resize(viewportWidth - 20, viewportHeight - controlsHeight); // Leave 20px for price scale
-        }
-
-        window.addEventListener('resize', resizeChart);
-        resizeChart();
-
-        // Add a vertical crosshair
-        document.getElementById('jump-btn').addEventListener('click', () => {
-            const datetimeInput = document.getElementById('datetime').value;
-
-            if (datetimeInput) {
-                // Parse the datetime input as UTC
-                const inputDate = new Date(datetimeInput);
-                const targetTime = Math.floor(Date.UTC(
-                    inputDate.getFullYear(),
-                    inputDate.getMonth(),
-                    inputDate.getDate(),
-                    inputDate.getHours(),
-                    inputDate.getMinutes()
-                ) / 1000); // Convert to seconds
-
-                // Find the closest data point in UTC
-                const closestData = chartData.reduce((prev, curr) =>
-                    Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
-                );
-
-                // Draw the vertical crosshair
-                if (closestData) {
-                    drawVerticalCrosshair(closestData);
-                }
-            } else {
-                alert('Please select a valid datetime.');
-            }
-        });
+        let crosshairTime = null; // Store the target time for the crosshair
 
         function drawVerticalCrosshair(closestData) {
+            crosshairTime = closestData.time; // Save the crosshair's time
+
             // Remove any existing crosshair
             const existingCrosshair = document.querySelector('.vertical-crosshair');
             if (existingCrosshair) existingCrosshair.remove();
 
-            // Bring the target time into view
-            chart.timeScale().setVisibleRange({
-                from: closestData.time - 60 * 15, // 15 minutes before
-                to: closestData.time + 60 * 15,  // 15 minutes after
-            });
+            // Create a new crosshair line
+            const verticalLine = document.createElement('div');
+            verticalLine.className = 'vertical-crosshair';
+            chartContainer.appendChild(verticalLine);
 
-            // Get the X-coordinate of the closest data point
-            setTimeout(() => {
-                const xCoordinate = chart.timeScale().timeToCoordinate(closestData.time);
-
-                if (xCoordinate !== null) {
-                    const verticalLine = document.createElement('div');
-                    verticalLine.className = 'vertical-crosshair';
-                    verticalLine.style.left = `${xCoordinate}px`;
-
-                    // Append to the chart container
-                    chartContainer.appendChild(verticalLine);
-                }
-            }, 100); // Delay to ensure the visible range is updated
+            // Position the crosshair
+            updateVerticalCrosshair();
         }
+
+        function updateVerticalCrosshair() {
+            if (crosshairTime === null) return; // No crosshair to update
+
+            // Get the X-coordinate of the crosshair's time
+            const xCoordinate = chart.timeScale().timeToCoordinate(crosshairTime);
+            const verticalLine = document.querySelector('.vertical-crosshair');
+
+            if (xCoordinate !== null && verticalLine) {
+                verticalLine.style.left = `${xCoordinate}px`;
+            } else if (verticalLine) {
+                // If the time is no longer visible, hide the crosshair
+                verticalLine.style.left = '-9999px';
+            }
+        }
+
+        // Listen for changes to the chart's visible time range
+        chart.timeScale().subscribeVisibleTimeRangeChange(() => {
+            updateVerticalCrosshair();
+        });
+
+        // Handle jump functionality
+        document.getElementById('jump-button').addEventListener('click', () => {
+            const datetimeInput = document.getElementById('datetime-input').value;
+            if (!datetimeInput) return;
+
+            const jumpTime = new Date(datetimeInput).toISOString();
+            const closestData = series.data().find(data => data.time === jumpTime);
+
+            if (closestData) {
+                chart.timeScale().setVisibleRange({ from: jumpTime, to: jumpTime });
+                drawVerticalCrosshair(closestData);
+            } else {
+                alert('No data for the selected time');
+            }
+        });
     </script>
 </body>
 </html>
