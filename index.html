@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TradingView-like Chart</title>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>TradingView-like Chart</title>
+        <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+        <style>
         body {
             margin: 0;
             padding: 0;
@@ -25,15 +25,12 @@
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
         }
     </style>
-</head>
-<body>
-    <div id="controls">
-        <label for="datetime">Jump to Datetime:</label>
-        <input type="datetime-local" id="datetime">
-        <button id="jump-btn">Jump</button>
-    </div>
-    <div id="chart"></div>
-    <script>
+    </head>
+    <body>
+        <div id="controls"><label for="datetime">Jump to Datetime:</label> <input type="datetime-local" id="datetime"> <button id="jump-btn">Jump</button>
+        </div>
+        <div id="chart"></div>
+        <script>
         const chartContainer = document.getElementById('chart');
 
         // Initialize the chart
@@ -86,35 +83,41 @@
 
         // Jump to specific datetime
         document.getElementById('jump-btn').addEventListener('click', () => {
-            const datetimeInput = document.getElementById('datetime').value;
+    const datetimeInput = document.getElementById('datetime').value;
 
-            if (datetimeInput) {
-                // Parse the datetime input as UTC (use `Date.UTC` to enforce UTC interpretation)
-                const inputDate = new Date(datetimeInput);
-                const targetTime = Math.floor(Date.UTC(
-                    inputDate.getFullYear(),
-                    inputDate.getMonth(),
-                    inputDate.getDate(),
-                    inputDate.getHours(),
-                    inputDate.getMinutes()
-                ) / 1000); // Convert to seconds
+    if (datetimeInput) {
+        const inputDate = new Date(datetimeInput);
+        const targetTime = Math.floor(Date.UTC(
+            inputDate.getFullYear(),
+            inputDate.getMonth(),
+            inputDate.getDate(),
+            inputDate.getHours(),
+            inputDate.getMinutes()
+        ) / 1000); // Convert to seconds
 
-                // Find the closest data point in UTC
-                const closestData = chartData.reduce((prev, curr) =>
-                    Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
-                );
+        // Find the closest data point in UTC
+        const closestData = chartData.reduce((prev, curr) =>
+            Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
+        );
 
-                // Set the visible range around the target time
-                if (closestData) {
-                    chart.timeScale().setVisibleRange({
-                        from: closestData.time - 60 * 15, // 15 minutes before
-                        to: closestData.time + 60 * 15,  // 15 minutes after
-                    });
+        // Highlight the candle by adding a marker
+        if (closestData) {
+            candlestickSeries.setMarkers([
+                {
+                    time: closestData.time,
+                    position: 'aboveBar',
+                    color: '#ff0000', // Highlight color
+                    shape: 'arrowDown', // Shape of the marker
+                    text: 'Target Candle',
                 }
-            } else {
-                alert('Please select a valid datetime.');
-            }
-        });
+            ]);
+        } else {
+            alert('No matching candle found.');
+        }
+    } else {
+        alert('Please select a valid datetime.');
+    }
+});
     </script>
-</body>
+    </body>
 </html>
