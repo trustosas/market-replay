@@ -14,27 +14,63 @@
         #chart {
             width: 100%;
         }
-        #controls {
+        #calendar-btn {
             position: fixed;
             top: 10px;
             left: 10px;
+            font-size: 24px;
             background: rgba(255, 255, 255, 0.9);
+            border: none;
             padding: 10px;
-            border-radius: 5px;
-            z-index: 10;
+            border-radius: 50%;
+            cursor: pointer;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #calendar-btn:before {
+            content: "date"; /* Replacing emoji with the word "date" */
+            font-size: 20px;
+        }
+        #calendar-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            display: none; /* Initially hidden */
+            z-index: 15;
+            width: 300px;
+            text-align: center;
+        }
+        #calendar-modal input {
+            margin-bottom: 10px;
+        }
+        #calendar-modal button {
+            margin-top: 10px;
+        }
+        body.modal-open {
+            overflow: hidden; /* Prevent scrolling when modal is open */
         }
     </style>
 </head>
 <body>
-    <div id="controls">
+    <button id="calendar-btn"></button>
+
+    <div id="calendar-modal">
         <label for="datetime">Jump to Datetime:</label>
         <input type="datetime-local" id="datetime">
         <button id="jump-btn">Jump</button>
     </div>
+
     <div id="chart"></div>
+
     <script>
         const chartContainer = document.getElementById('chart');
+        const calendarModal = document.getElementById('calendar-modal');
+        const calendarBtn = document.getElementById('calendar-btn');
+        const body = document.body;
 
         // Initialize the chart
         const chart = LightweightCharts.createChart(chartContainer, {
@@ -74,7 +110,7 @@
         function resizeChart() {
             const viewportHeight = window.visualViewport?.height || window.innerHeight;
             const viewportWidth = window.visualViewport?.width || window.innerWidth;
-            const controlsHeight = document.getElementById('controls').offsetHeight + 20; // Add padding
+            const controlsHeight = calendarModal.offsetHeight + 20; // Padding
 
             // Resize the chart dynamically
             chartContainer.style.height = `${viewportHeight - controlsHeight}px`;
@@ -83,6 +119,17 @@
 
         window.addEventListener('resize', resizeChart);
         resizeChart();
+
+        // Open and close the calendar modal
+        calendarBtn.addEventListener('click', () => {
+            if (calendarModal.style.display === 'none' || !calendarModal.style.display) {
+                calendarModal.style.display = 'block';
+                body.classList.add('modal-open'); // Disable body scroll
+            } else {
+                calendarModal.style.display = 'none';
+                body.classList.remove('modal-open'); // Enable body scroll
+            }
+        });
 
         // Jump to specific datetime
         document.getElementById('jump-btn').addEventListener('click', () => {
@@ -116,7 +163,6 @@
                     ]);
 
                     // Adjust the visible range to focus on the target candle
-                    const range = chart.timeScale().getVisibleRange();
                     const targetIndex = chartData.findIndex(candle => candle.time === closestData.time);
 
                     const from = Math.max(targetIndex - 30, 0); // Focus on the candle, with some buffer
@@ -132,6 +178,10 @@
             } else {
                 alert('Please select a valid datetime.');
             }
+
+            // Close the modal after jump
+            calendarModal.style.display = 'none';
+            body.classList.remove('modal-open');
         });
     </script>
 </body>
