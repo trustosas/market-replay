@@ -24,6 +24,21 @@
             z-index: 10;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
         }
+        .chevron {
+            position: absolute;
+            z-index: 10;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        .chevron-up {
+            border-width: 0 10px 10px 10px;
+            border-color: transparent transparent #eee transparent;
+        }
+        .chevron-down {
+            border-width: 10px 10px 0 10px;
+            border-color: #eee transparent transparent transparent;
+        }
     </style>
 </head>
 <body>
@@ -84,12 +99,40 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
+        // Add chevrons above and below a specific candle
+        function addChevronElements(time) {
+            // Clear existing chevrons
+            document.querySelectorAll('.chevron').forEach(chevron => chevron.remove());
+
+            // Get the target candle
+            const targetCandle = chartData.find(candle => candle.time === time);
+            if (!targetCandle) return;
+
+            // Calculate coordinates
+            const x = Math.floor(chart.timeScale().timeToCoordinate(time));
+            const y = Math.floor(chart.priceScale('right').priceToCoordinate(targetCandle.close));
+
+            // Add chevron elements
+            const chevronUp = document.createElement('div');
+            chevronUp.className = 'chevron chevron-up';
+            chevronUp.style.left = `${x - 10}px`; // Center the chevron
+            chevronUp.style.top = `${y - 30}px`; // Position above the candle
+
+            const chevronDown = document.createElement('div');
+            chevronDown.className = 'chevron chevron-down';
+            chevronDown.style.left = `${x - 10}px`; // Center the chevron
+            chevronDown.style.top = `${y + 20}px`; // Position below the candle
+
+            chartContainer.appendChild(chevronUp);
+            chartContainer.appendChild(chevronDown);
+        }
+
         // Jump to specific datetime
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
 
             if (datetimeInput) {
-                // Parse the datetime input as UTC (use `Date.UTC` to enforce UTC interpretation)
+                // Parse the datetime input as UTC
                 const inputDate = new Date(datetimeInput);
                 const targetTime = Math.floor(Date.UTC(
                     inputDate.getFullYear(),
@@ -99,7 +142,7 @@
                     inputDate.getMinutes()
                 ) / 1000); // Convert to seconds
 
-                // Find the closest data point in UTC
+                // Find the closest data point
                 const closestData = chartData.reduce((prev, curr) =>
                     Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
                 );
@@ -110,6 +153,9 @@
                         from: closestData.time - 60 * 15, // 15 minutes before
                         to: closestData.time + 60 * 15,  // 15 minutes after
                     });
+
+                    // Add chevrons
+                    addChevronElements(closestData.time);
                 }
             } else {
                 alert('Please select a valid datetime.');
