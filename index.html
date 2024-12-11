@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,6 +27,7 @@
         }
     </style>
 </head>
+
 <body>
     <div id="controls">
         <label for="datetime">Jump to:</label>
@@ -35,7 +37,7 @@
     <div id="chart"></div>
     <script>
         const chartContainer = document.getElementById('chart');
-
+        
         // Initialize the chart
         const chart = LightweightCharts.createChart(chartContainer, {
             layout: {
@@ -50,10 +52,13 @@
                 timeVisible: true,
                 secondsVisible: false,
             },
+            crosshair: {
+                mode: LightweightCharts.CrosshairMode.Normal,
+            },
         });
-
+        
         const candlestickSeries = chart.addCandlestickSeries();
-
+        
         // Fetch and set the data
         let chartData = [];
         fetch('eurusd15.json')
@@ -69,91 +74,53 @@
                 candlestickSeries.setData(chartData);
             })
             .catch(err => console.error('Error loading data:', err));
-
+        
         // Dynamically resize the chart
         function resizeChart() {
             const viewportHeight = window.visualViewport?.height || window.innerHeight;
             const viewportWidth = window.visualViewport?.width || window.innerWidth;
             const controlsHeight = document.getElementById('controls').offsetHeight + 20; // Add padding
-
+        
             // Resize the chart dynamically
             chartContainer.style.height = `${viewportHeight - controlsHeight}px`;
             chart.resize(viewportWidth - 20, viewportHeight - controlsHeight); // Leave 20px for price scale
         }
-
+        
         window.addEventListener('resize', resizeChart);
         resizeChart();
-
+        
         // Crosshair snapping to high/low wicks
         chart.subscribeCrosshairMove((param) => {
             if (!param.point || !param.seriesData) return;
-
+        
             const seriesData = param.seriesData.get(candlestickSeries);
             if (!seriesData) return;
-
+        
             // Determine if the crosshair is closer to the high or low
             const { high, low } = seriesData;
             const snappedPrice = Math.abs(param.point.y - high) < Math.abs(param.point.y - low) ? high : low;
-
-            // Update crosshair position (optional visual effect)
-            chart.priceScale().applyOptions({
-                scaleMargins: { top: 0.2, bottom: 0.2 },
-                borderVisible: false,
-            });
-
-            // Optional: Log the snapped price
-            console.log('Crosshair snapped to:', snappedPrice);
+        
+            // Update tooltip
+            const tooltip = document.querySelector('.tooltip') || createTooltip();
+            tooltip.style.left = `${param.point.x}px`;
+            tooltip.style.top = `${chart.priceScale('right').priceToCoordinate(snappedPrice) - 15}px`; // Offset
+            tooltip.innerHTML = `Snapped Price: ${snappedPrice.toFixed(2)}`;
         });
-
-        // Jump to specific datetime
-        document.getElementById('jump-btn').addEventListener('click', () => {
-            const datetimeInput = document.getElementById('datetime').value;
-
-            if (datetimeInput) {
-                const inputDate = new Date(datetimeInput);
-                const targetTime = Math.floor(Date.UTC(
-                    inputDate.getFullYear(),
-                    inputDate.getMonth(),
-                    inputDate.getDate(),
-                    inputDate.getHours(),
-                    inputDate.getMinutes()
-                ) / 1000); // Convert to seconds
-
-                // Find the closest data point in UTC
-                const closestData = chartData.reduce((prev, curr) =>
-                    Math.abs(curr.time - targetTime) < Math.abs(prev.time - targetTime) ? curr : prev
-                );
-
-                if (closestData) {
-                    // Highlight the candle by adding a marker
-                    candlestickSeries.setMarkers([
-                        {
-                            time: closestData.time,
-                            position: 'aboveBar',
-                            color: '#ff0000', // Highlight color
-                            shape: 'arrowDown', // Shape of the marker
-                            text: '',
-                        }
-                    ]);
-
-                    // Adjust the visible range to focus on the target candle
-                    const range = chart.timeScale().getVisibleRange();
-                    const targetIndex = chartData.findIndex(candle => candle.time === closestData.time);
-
-                    const from = Math.max(targetIndex - 30, 0); // Focus on the candle, with some buffer
-                    const to = Math.min(targetIndex + 30, chartData.length - 1); // Same buffer after the candle
-
-                    chart.timeScale().setVisibleRange({
-                        from: chartData[from].time,
-                        to: chartData[to].time
-                    });
-                } else {
-                    alert('No matching candle found.');
-                }
-            } else {
-                alert('Please select a valid datetime.');
-            }
-        });
+        
+        // Helper function to create a tooltip
+        function createTooltip() {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.style.position = 'absolute';
+            tooltip.style.background = 'rgba(0, 0, 0, 0.8)';
+            tooltip.style.color = '#fff';
+            tooltip.style.padding = '5px';
+            tooltip.style.borderRadius = '3px';
+            tooltip.style.pointerEvents = 'none';
+            document.body.appendChild(tooltip);
+            return tooltip;
+        }
     </script>
 </body>
+
 </html>
