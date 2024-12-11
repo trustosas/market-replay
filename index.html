@@ -84,6 +84,27 @@
         window.addEventListener('resize', resizeChart);
         resizeChart();
 
+        // Crosshair snapping to high/low wicks
+        chart.subscribeCrosshairMove((param) => {
+            if (!param.point || !param.seriesData) return;
+
+            const seriesData = param.seriesData.get(candlestickSeries);
+            if (!seriesData) return;
+
+            // Determine if the crosshair is closer to the high or low
+            const { high, low } = seriesData;
+            const snappedPrice = Math.abs(param.point.y - high) < Math.abs(param.point.y - low) ? high : low;
+
+            // Update crosshair position (optional visual effect)
+            chart.priceScale().applyOptions({
+                scaleMargins: { top: 0.2, bottom: 0.2 },
+                borderVisible: false,
+            });
+
+            // Optional: Log the snapped price
+            console.log('Crosshair snapped to:', snappedPrice);
+        });
+
         // Jump to specific datetime
         document.getElementById('jump-btn').addEventListener('click', () => {
             const datetimeInput = document.getElementById('datetime').value;
