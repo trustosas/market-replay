@@ -158,15 +158,20 @@
         // Toggle the visibility of the controls div
         document.getElementById('toggle-controls-btn').addEventListener('click', (event) => {
             const controlsDiv = document.getElementById('controls');
-            controlsDiv.style.display = controlsDiv.style.display === 'none' ? 'block' : 'none';
+            const toggleBtn = document.getElementById('toggle-controls-btn');
+            const isControlsVisible = controlsDiv.style.display === 'block';
+            controlsDiv.style.display = isControlsVisible ? 'none' : 'block';
+            toggleBtn.style.display = isControlsVisible ? 'block' : 'none';
             event.stopPropagation();
         });
 
         // Hide the controls div when clicking outside
         document.addEventListener('click', (event) => {
             const controlsDiv = document.getElementById('controls');
+            const toggleBtn = document.getElementById('toggle-controls-btn');
             if (!controlsDiv.contains(event.target) && controlsDiv.style.display === 'block') {
                 controlsDiv.style.display = 'none';
+                toggleBtn.style.display = 'block';
             }
         });
     </script>
