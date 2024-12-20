@@ -23,10 +23,31 @@
             border-radius: 5px;
             z-index: 10;
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+            display: none; /* Initially hide the div */
+        }
+        #toggle-controls-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 15;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #toggle-controls-btn .icon {
+            font-size: 18px;
         }
     </style>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 </head>
 <body>
+    <button id="toggle-controls-btn">
+        <span class="material-icons">calendar_today</span>
+    </button>
     <div id="controls">
         <label for="datetime">Jump to:</label>
         <input type="datetime-local" id="datetime">
@@ -131,6 +152,21 @@
                 }
             } else {
                 alert('Please select a valid datetime.');
+            }
+        });
+
+        // Toggle the visibility of the controls div
+        document.getElementById('toggle-controls-btn').addEventListener('click', (event) => {
+            const controlsDiv = document.getElementById('controls');
+            controlsDiv.style.display = controlsDiv.style.display === 'none' ? 'block' : 'none';
+            event.stopPropagation();
+        });
+
+        // Hide the controls div when clicking outside
+        document.addEventListener('click', (event) => {
+            const controlsDiv = document.getElementById('controls');
+            if (!controlsDiv.contains(event.target) && controlsDiv.style.display === 'block') {
+                controlsDiv.style.display = 'none';
             }
         });
     </script>
